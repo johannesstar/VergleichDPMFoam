@@ -60,3 +60,7 @@
 }
 
 #include "continuityErrs.H"
+
+// Explicitly relax pressure for momentum corrector
+
+fvOptions.correct(Uc);

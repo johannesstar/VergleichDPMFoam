@@ -24,7 +24,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    DPMDyMFoam
+    extDPMDyMFoam
 
 Description
     Transient solver for the coupled transport of a single kinematic particle
@@ -33,6 +33,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "fvOptions.H"
 #include "fvCFD.H"
 #include "dynamicFvMesh.H"
 #include "singlePhaseTransportModel.H"
