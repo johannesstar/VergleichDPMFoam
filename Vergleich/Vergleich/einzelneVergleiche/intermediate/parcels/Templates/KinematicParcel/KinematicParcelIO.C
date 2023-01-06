@@ -67,7 +67,8 @@ Foam::KinematicParcel<ParcelType>::KinematicParcel
     rho_(0.0),
     age_(0.0),
     tTurb_(0.0),
-    UTurb_(Zero)
+    UTurb_(Zero),
+    parcelCurl_(Zero)
 {
     if (readFields)
     {
@@ -82,7 +83,8 @@ Foam::KinematicParcel<ParcelType>::KinematicParcel
                 >> rho_
                 >> age_
                 >> tTurb_
-                >> UTurb_;
+                >> UTurb_
+                >> parcelCurl_;
         }
         else if (!is.checkLabelSize<>() || !is.checkScalarSize<>())
         {
@@ -191,6 +193,14 @@ void Foam::KinematicParcel<ParcelType>::readFields(CloudType& c)
     );
     c.checkFieldIOobject(c, UTurb);
 
+    IOField<vector> parcelCurl
+    (
+        c.fieldIOobject("parcelCurl", IOobject::MUST_READ),
+        valid
+    );
+    c.checkFieldIOobject(c, parcelCurl);
+
+
     label i = 0;
 
     for (KinematicParcel<ParcelType>& p : c)
@@ -205,6 +215,7 @@ void Foam::KinematicParcel<ParcelType>::readFields(CloudType& c)
         p.age_ = age[i];
         p.tTurb_ = tTurb[i];
         p.UTurb_ = UTurb[i];
+        p.parcelCurl_ = parcelCurl[i];
 
         ++i;
     }
@@ -234,6 +245,7 @@ void Foam::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
     IOField<scalar> age(c.fieldIOobject("age", IOobject::NO_READ), np);
     IOField<scalar> tTurb(c.fieldIOobject("tTurb", IOobject::NO_READ), np);
     IOField<vector> UTurb(c.fieldIOobject("UTurb", IOobject::NO_READ), np);
+    IOField<vector> parcelCurl(c.fieldIOobject("parcelCurl", IOobject::NO_READ), np);
 
     label i = 0;
 
@@ -249,6 +261,7 @@ void Foam::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
         age[i] = p.age();
         tTurb[i] = p.tTurb();
         UTurb[i] = p.UTurb();
+        parcelCurl[i] = p.parcelCurl();
 
         ++i;
     }
@@ -263,6 +276,7 @@ void Foam::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
     age.write(valid);
     tTurb.write(valid);
     UTurb.write(valid);
+    parcelCurl.write(valid);
 }
 
 
@@ -291,6 +305,7 @@ void Foam::KinematicParcel<ParcelType>::writeProperties
     writeProp("age", age_);
     writeProp("tTurb", tTurb_);
     writeProp("UTurb", UTurb_);
+    writeProp("parcelCurl", parcelCurl_);
 
     #undef writeProp
 }
@@ -318,6 +333,7 @@ void Foam::KinematicParcel<ParcelType>::readObjects
     const auto& age = cloud::lookupIOField<scalar>("age", obr);
     const auto& tTurb = cloud::lookupIOField<scalar>("tTurb", obr);
     const auto& UTurb = cloud::lookupIOField<vector>("UTurb", obr);
+    const auto& parcelCurl = cloud::lookupIOField<vector>("parcelCurl", obr);
 
     label i = 0;
 
@@ -333,6 +349,7 @@ void Foam::KinematicParcel<ParcelType>::readObjects
         p.age_ = age[i];
         p.tTurb_ = tTurb[i];
         p.UTurb_ = UTurb[i];
+        p.parcelCurl_ = parcelCurl[i];
 
         ++i;
     }
@@ -361,6 +378,7 @@ void Foam::KinematicParcel<ParcelType>::writeObjects
     auto& age = cloud::createIOField<scalar>("age", np, obr);
     auto& tTurb = cloud::createIOField<scalar>("tTurb", np, obr);
     auto&& UTurb = cloud::createIOField<vector>("UTurb", np, obr);
+    auto&& parcelCurl = cloud::createIOField<vector>("parcelCurl", np, obr);
 
     label i = 0;
 
@@ -376,6 +394,7 @@ void Foam::KinematicParcel<ParcelType>::writeObjects
         age[i] = p.age();
         tTurb[i] = p.tTurb();
         UTurb[i] = p.UTurb();
+        parcelCurl[i] = p.parcelCurl();
 
         ++i;
     }
@@ -403,7 +422,8 @@ Foam::Ostream& Foam::operator<<
             << token::SPACE << p.rho()
             << token::SPACE << p.age()
             << token::SPACE << p.tTurb()
-            << token::SPACE << p.UTurb();
+            << token::SPACE << p.UTurb()
+            << token::SPACE << p.parcelCurl();
     }
     else
     {

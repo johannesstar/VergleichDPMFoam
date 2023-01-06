@@ -300,6 +300,9 @@ protected:
             //- Turbulent velocity fluctuation [m/s]
             vector UTurb_;
 
+            //- Curl of particles 
+            vector parcelCurl_;
+
 
     // Protected Member Functions
 
@@ -316,6 +319,19 @@ protected:
             const vector& Su,          // explicit particle momentum source
             vector& dUTrans,           // momentum transfer to carrier
             scalar& Spu                // linearised drag coefficient
+        ) const;
+
+        //- Calculate new particle curl
+        template<class TrackCloudType>
+        const vector calcCurl
+        (
+            TrackCloudType& cloud,
+            trackingData& td,
+            const scalar dt,           // timestep
+            const scalar Re,           // Reynolds number
+            const scalar mu,           // local carrier viscosity
+            const scalar mass,         // mass
+            vector& dOmegaTrans           // momentum transfer to carrier
         ) const;
 
 
@@ -340,6 +356,7 @@ public:
           + " age"
           + " tTurb"
           + " (UTurbx UTurby UTurbz)"
+          + " (parcelCurlx parcelCurly parcelCurlz)"
         );
 
 
@@ -378,6 +395,7 @@ public:
             const scalar d0,
             const scalar dTarget0,
             const vector& U0,
+            const vector& parcelCurl0,
             const constantProperties& constProps
         );
 
@@ -465,6 +483,9 @@ public:
             //- Return const access to turbulent velocity fluctuation
             inline const vector& UTurb() const;
 
+            //- Return const access to curl of parcel
+            inline const vector& parcelCurl() const;
+
 
         // Edit
 
@@ -497,6 +518,9 @@ public:
 
             //- Return access to turbulent velocity fluctuation
             inline vector& UTurb();
+
+            //- Return access to curl of parcel
+            inline vector& parcelCurl();
 
 
         // Helper functions

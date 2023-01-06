@@ -92,7 +92,8 @@ inline Foam::KinematicParcel<ParcelType>::KinematicParcel
     rho_(0.0),
     age_(0.0),
     tTurb_(0.0),
-    UTurb_(Zero)
+    UTurb_(Zero),
+    parcelCurl_(Zero)
 {}
 
 
@@ -114,7 +115,8 @@ inline Foam::KinematicParcel<ParcelType>::KinematicParcel
     rho_(0.0),
     age_(0.0),
     tTurb_(0.0),
-    UTurb_(Zero)
+    UTurb_(Zero),
+    parcelCurl_(Zero)
 {}
 
 
@@ -131,6 +133,7 @@ inline Foam::KinematicParcel<ParcelType>::KinematicParcel
     const scalar d0,
     const scalar dTarget0,
     const vector& U0,
+    const vector& parcelCurl0,
     const constantProperties& constProps
 )
 :
@@ -144,7 +147,8 @@ inline Foam::KinematicParcel<ParcelType>::KinematicParcel
     rho_(constProps.rho0()),
     age_(0.0),
     tTurb_(0.0),
-    UTurb_(Zero)
+    UTurb_(Zero),
+    parcelCurl_(parcelCurl0)
 {}
 
 
@@ -263,6 +267,13 @@ inline const Foam::vector& Foam::KinematicParcel<ParcelType>::UTurb() const
 
 
 template<class ParcelType>
+inline const Foam::vector& Foam::KinematicParcel<ParcelType>::parcelCurl() const
+{
+    return parcelCurl_;
+}
+
+
+template<class ParcelType>
 inline void Foam::KinematicParcel<ParcelType>::active(const bool state)
 {
     active_ = state;
@@ -329,6 +340,13 @@ template<class ParcelType>
 inline Foam::vector& Foam::KinematicParcel<ParcelType>::UTurb()
 {
     return UTurb_;
+}
+
+
+template<class ParcelType>
+inline Foam::vector& Foam::KinematicParcel<ParcelType>::parcelCurl()
+{
+    return parcelCurl_;
 }
 
 

@@ -33,6 +33,12 @@ License
 #include "FacePostProcessing.H"
 #include "ParticleCollector.H"
 #include "ParticleErosion.H"
+#include "Finnie.H"
+#include "FinnieExtended.H"
+#include "Bitter.H"
+#include "Arabnejad.H"
+#include "NeilsonGilchrist.H"
+#include "Oka.H"
 #include "ParticleTracks.H"
 #include "ParticleTrap.H"
 #include "PatchCollisionDensity.H"
@@ -48,6 +54,12 @@ License
     makeCloudFunctionObjectType(FacePostProcessing, CloudType);                \
     makeCloudFunctionObjectType(ParticleCollector, CloudType);                 \
     makeCloudFunctionObjectType(ParticleErosion, CloudType);                   \
+    makeCloudFunctionObjectType(Finnie, CloudType);                            \
+    makeCloudFunctionObjectType(FinnieExtended, CloudType);                    \
+    makeCloudFunctionObjectType(Bitter, CloudType);                            \
+    makeCloudFunctionObjectType(Arabnejad, CloudType);                         \
+    makeCloudFunctionObjectType(NeilsonGilchrist, CloudType);                  \
+    makeCloudFunctionObjectType(Oka, CloudType);                               \
     makeCloudFunctionObjectType(ParticleTracks, CloudType);                    \
     makeCloudFunctionObjectType(ParticleTrap, CloudType);                      \
     makeCloudFunctionObjectType(PatchCollisionDensity, CloudType);             \

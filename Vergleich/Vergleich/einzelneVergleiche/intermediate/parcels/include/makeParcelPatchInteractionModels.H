@@ -31,6 +31,7 @@ License
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "LocalInteraction.H"
+#include "myLocalInteraction.H"
 #include "NoInteraction.H"
 #include "Rebound.H"
 #include "StandardWallInteraction.H"
@@ -43,6 +44,7 @@ License
     makePatchInteractionModel(CloudType);                                      \
                                                                                \
     makePatchInteractionModelType(LocalInteraction, CloudType);                \
+    makePatchInteractionModelType(myLocalInteraction, CloudType);              \
     makePatchInteractionModelType(NoInteraction, CloudType);                   \
     makePatchInteractionModelType(Rebound, CloudType);                         \
     makePatchInteractionModelType(StandardWallInteraction, CloudType);         \

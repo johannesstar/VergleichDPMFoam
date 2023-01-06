@@ -31,6 +31,7 @@ License
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "SphereDragForce.H"
+#include "MagnusForce.H"
 #include "NonSphereDragForce.H"
 #include "WenYuDragForce.H"
 #include "ErgunWenYuDragForce.H"
@@ -53,6 +54,7 @@ License
                                                                                \
     makeParticleForceModel(CloudType);                                         \
     makeParticleForceModelType(SphereDragForce, CloudType);                    \
+    makeParticleForceModelType(MagnusForce, CloudType);                        \
     makeParticleForceModelType(NonSphereDragForce, CloudType);                 \
     makeParticleForceModelType(WenYuDragForce, CloudType);                     \
     makeParticleForceModelType(ErgunWenYuDragForce, CloudType);                \

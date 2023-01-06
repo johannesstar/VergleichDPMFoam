@@ -133,6 +133,9 @@ void Foam::KinematicParcel<ParcelType>::calc
     // Momentum transfer from the particle to the carrier phase
     vector dUTrans = Zero;
 
+    // Torgue transfer from the particle to the carrier phase
+    vector dOmegaTrans = Zero;
+
 
     // Motion
     // ~~~~~~
@@ -140,6 +143,10 @@ void Foam::KinematicParcel<ParcelType>::calc
     // Calculate new particle velocity
     this->U_ =
         calcVelocity(cloud, td, dt, Re, td.muc(), mass0, Su, dUTrans, Spu);
+
+    // Calculate new particle Curl
+    this->parcelCurl_ =
+        calcCurl(cloud, td, dt, Re, td.muc(), mass0, dOmegaTrans);
 
 
     // Accumulate carrier phase source terms
@@ -230,6 +237,62 @@ const Foam::vector Foam::KinematicParcel<ParcelType>::calcVelocity
     return Unew;
 }
 
+template<class ParcelType>
+template<class TrackCloudType>
+const Foam::vector Foam::KinematicParcel<ParcelType>::calcCurl
+(
+    TrackCloudType& cloud,
+    trackingData& td,
+    const scalar dt,
+    const scalar Re,
+    const scalar mu,
+    const scalar mass,
+    vector& dOmegaTrans
+) const
+{
+    const typename TrackCloudType::parcelType& p =
+        static_cast<const typename TrackCloudType::parcelType&>(*this);
+    /*typename TrackCloudType::parcelType::trackingData& ttd =
+        static_cast<typename TrackCloudType::parcelType::trackingData&>(td);*/
+    
+    const typename TrackCloudType::forceType& forces = cloud.forces();
+    
+    const vector curlUc = forces.getcurlUc(p);
+
+    const scalar Ip = 0.1 * mass * sqr(d_);
+
+    const vector Omega = 0.5 * curlUc - (parcelCurl_);
+
+    const scalar Rer = rho_ * sqr(d_) * mag(Omega) / mu;
+
+    scalar Cr;
+
+    if (Rer == 0)
+    {
+        Cr = 0;
+    }
+    else if (Rer < 32)
+    {
+        Cr = 64 * constant::mathematical::pi / Rer;
+    }
+    else
+    {
+        Cr = (12.9 / (sqrt(Rer))) + (128.4 / Rer); 
+    }
+
+    const vector T = Cr * rho_ * pow(d_,5) / 64 * mag(Omega) * Omega;
+
+    const vector aCurl = T / Ip;
+
+    const vector deltaParcelCurl = aCurl * dt;
+
+    const vector parcelCurlNew = parcelCurl_ + deltaParcelCurl;
+
+    //const vector dTorgueTrans -= deltaParcelCurl * Ip;
+
+    return parcelCurlNew;
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -249,7 +312,8 @@ Foam::KinematicParcel<ParcelType>::KinematicParcel
     rho_(p.rho_),
     age_(p.age_),
     tTurb_(p.tTurb_),
-    UTurb_(p.UTurb_)
+    UTurb_(p.UTurb_),
+    parcelCurl_(p.parcelCurl_)
 {}
 
 
@@ -270,7 +334,8 @@ Foam::KinematicParcel<ParcelType>::KinematicParcel
     rho_(p.rho_),
     age_(p.age_),
     tTurb_(p.tTurb_),
-    UTurb_(p.UTurb_)
+    UTurb_(p.UTurb_),
+    parcelCurl_(p.parcelCurl_)
 {}
 
 
