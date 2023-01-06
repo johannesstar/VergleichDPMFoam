@@ -42,7 +42,6 @@ volScalarField p
     mesh
 );
 
-
 Info<< "Reading/calculating continuous-phase face flux field phic\n"
     << endl;
 
@@ -172,3 +171,5 @@ continuousPhaseTurbulence
         continuousPhaseTransport
     )
 );
+
+#include "createFvOptions.H"

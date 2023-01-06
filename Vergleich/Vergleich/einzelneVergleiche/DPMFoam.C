@@ -24,7 +24,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    DPMFoam
+    extDPMFoam
 
 Group
     grpLagrangianSolvers
@@ -36,10 +36,14 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "fvOptions.H"
 #include "fvCFD.H"
 #include "singlePhaseTransportModel.H"
 #include "PhaseIncompressibleTurbulenceModel.H"
 #include "pimpleControl.H"
+
+#include "wallFvPatch.H"
+#include "wallDist.H"
 
 #ifdef MPPIC
     #include "basicKinematicMPPICCloud.H"
