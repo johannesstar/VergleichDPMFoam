@@ -42,7 +42,8 @@ Foam::ParticleForceList<CloudType>::ParticleForceList
     mesh_(mesh),
     dict_(dictionary::null),
     calcCoupled_(true),
-    calcNonCoupled_(true)
+    calcNonCoupled_(true),
+    getcurlUc_(true)
 {}
 
 
@@ -60,7 +61,8 @@ Foam::ParticleForceList<CloudType>::ParticleForceList
     mesh_(mesh),
     dict_(dict),
     calcCoupled_(true),
-    calcNonCoupled_(true)
+    calcNonCoupled_(true),
+    getcurlUc_(true)
 {
     if (readFields)
     {
@@ -212,5 +214,24 @@ Foam::scalar Foam::ParticleForceList<CloudType>::massEff
     return massEff;
 }
 
+
+template<class CloudType>
+Foam::vector Foam::ParticleForceList<CloudType>::getcurlUc
+(
+    const typename CloudType::parcelType& p
+) const
+{
+    vector value(Zero);
+
+    if (getcurlUc_)
+    {
+        forAll(*this, i)
+        {
+            value += this->operator[](i).getcurlUc(p);
+        }
+    }
+
+    return value;
+}
 
 // ************************************************************************* //

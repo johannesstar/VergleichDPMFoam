@@ -72,6 +72,9 @@ class ParticleForceList
         //- Calculate non-coupled forces flag
         bool calcNonCoupled_;
 
+        //- Return the curl of the carrier fluid
+        bool getcurlUc_;
+
 
 public:
 
@@ -119,6 +122,9 @@ public:
             //- Set the calcNonCoupled flag
             inline void setCalcNonCoupled(bool flag);
 
+            //- Set the getcurlUc flas
+            inline void setGetcurlUc(bool flag);
+
 
         // Evaluation
 
@@ -153,6 +159,11 @@ public:
                 const typename CloudType::parcelType& p,
                 const typename CloudType::parcelType::trackingData& td,
                 const scalar mass
+            ) const;
+
+            virtual vector getcurlUc
+            (
+                const typename CloudType::parcelType& p
             ) const;
 };
 

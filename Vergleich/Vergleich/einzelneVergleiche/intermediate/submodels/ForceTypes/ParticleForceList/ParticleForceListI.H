@@ -69,4 +69,11 @@ inline void Foam::ParticleForceList<CloudType>::setCalcNonCoupled(bool flag)
 }
 
 
+template<class CloudType>
+inline void Foam::ParticleForceList<CloudType>::setGetcurlUc(bool flag)
+{
+    getcurlUc_ = flag;
+}
+
+
 // ************************************************************************* //
