@@ -85,6 +85,12 @@ class PatchInjection
         //- Initial parcel velocity [m/s]
         const vector U0_;
 
+        //- Random fluctuation of the velocity
+        const scalar randFluctuation0_;
+
+        //- Initial parcel Curl 
+        const vector parcelCurl0_;
+
         //- Flow rate profile relative to SOI []
         const TimeFunction1<scalar> flowRateProfile_;
 

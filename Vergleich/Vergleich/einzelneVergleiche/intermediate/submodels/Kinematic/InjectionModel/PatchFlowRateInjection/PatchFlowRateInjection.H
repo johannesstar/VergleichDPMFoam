@@ -81,6 +81,10 @@ class PatchFlowRateInjection
         //- Name of carrier density field
         const word rhoName_;
 
+        //- Random fluctuation of the velocity
+        const scalar randFluctuation0_;
+//        const vector randFluctuation0_;
+
         //- Injection duration [s]
         scalar duration_;
 

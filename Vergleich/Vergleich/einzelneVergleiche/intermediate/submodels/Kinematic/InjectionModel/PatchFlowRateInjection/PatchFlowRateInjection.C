@@ -46,6 +46,8 @@ Foam::PatchFlowRateInjection<CloudType>::PatchFlowRateInjection
     patchInjectionBase(owner.mesh(), this->coeffDict().getWord("patch")),
     phiName_(this->coeffDict().template lookupOrDefault<word>("phi", "phi")),
     rhoName_(this->coeffDict().template lookupOrDefault<word>("rho", "rho")),
+    randFluctuation0_(readScalar(this->coeffDict().lookup("randFluctuation0"))),
+//    randFluctuation0_(this->coeffDict().lookup("randFluctuation0")),
     duration_(this->coeffDict().getScalar("duration")),
     concentration_
     (
@@ -90,6 +92,7 @@ Foam::PatchFlowRateInjection<CloudType>::PatchFlowRateInjection
     patchInjectionBase(im),
     phiName_(im.phiName_),
     rhoName_(im.rhoName_),
+    randFluctuation0_(im.randFluctuation0_),
     duration_(im.duration_),
     concentration_(im.concentration_),
     parcelConcentration_(im.parcelConcentration_),
@@ -247,7 +250,10 @@ void Foam::PatchFlowRateInjection<CloudType>::setProperties
 )
 {
     // Set particle velocity to carrier velocity
-    parcel.U() = this->owner().U()[parcel.cell()];
+    Random& rnd = this->owner().rndGen();
+
+//    parcel.U() = this->owner().U()[parcel.cell()] + mag(this->owner().U()[parcel.cell()]) * randFluctuation0_ * rnd.globalGaussNormal<vector>();
+    parcel.U() = this->owner().U()[parcel.cell()] + mag(this->owner().U()[parcel.cell()]) * randFluctuation0_* rnd.GaussNormal<vector>();
 
     // Set particle diameter
     parcel.d() = sizeDistribution_->sample();

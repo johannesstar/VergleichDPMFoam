@@ -48,6 +48,8 @@ Foam::PatchInjection<CloudType>::PatchInjection
         this->coeffDict().getScalar("parcelsPerSecond")
     ),
     U0_(this->coeffDict().lookup("U0")),
+    randFluctuation0_(readScalar(this->coeffDict().lookup("randFluctuation0"))),
+    parcelCurl0_(this->coeffDict().lookup("parcelCurl0")),
     flowRateProfile_
     (
         TimeFunction1<scalar>
@@ -86,6 +88,8 @@ Foam::PatchInjection<CloudType>::PatchInjection
     duration_(im.duration_),
     parcelsPerSecond_(im.parcelsPerSecond_),
     U0_(im.U0_),
+    randFluctuation0_(im.randFluctuation0_),
+    parcelCurl0_(im.parcelCurl0_),
     flowRateProfile_(im.flowRateProfile_),
     sizeDistribution_(im.sizeDistribution_.clone())
 {}
@@ -196,7 +200,12 @@ void Foam::PatchInjection<CloudType>::setProperties
 )
 {
     // set particle velocity
-    parcel.U() = U0_;
+    Random& rnd = this->owner().rndGen();
+
+    parcel.U() = U0_ + mag(U0_) * randFluctuation0_ * rnd.globalGaussNormal<vector>();
+
+    // set particle Curl
+    parcel.parcelCurl() = parcelCurl0_;
 
     // set particle diameter
     parcel.d() = sizeDistribution_->sample();
