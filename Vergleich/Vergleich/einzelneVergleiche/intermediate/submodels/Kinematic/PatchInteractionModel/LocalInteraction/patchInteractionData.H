@@ -1,11 +1,9 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -31,8 +29,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef patchInteractionData_H
-#define patchInteractionData_H
+#ifndef myPatchInteractionData_H
+#define myPatchInteractionData_H
 
 #include "Istream.H"
 
@@ -45,17 +43,17 @@ namespace Foam
 \*---------------------------------------------------------------------------*/
 
 // Forward declaration of classes
-class patchInteractionData;
+class myPatchInteractionData;
 
 // Forward declaration of friend functions
 Istream& operator>>
 (
     Istream& is,
-    patchInteractionData& pid
+    myPatchInteractionData& pid
 );
 
 
-class patchInteractionData
+class myPatchInteractionData
 {
     // Private data
 
@@ -63,13 +61,36 @@ class patchInteractionData
         word interactionTypeName_;
 
         //- Patch name
-        keyType patchName_;
+        word patchName_;
 
-        //- Elasticity coefficient
-        scalar e_;
+        //- characteristic Elasticity coefficient
+        scalar eH_;
 
-        //- Restitution coefficient
-        scalar mu_;
+        //- statuc Restitution coefficient
+        scalar e0_;
+
+        //- characteristic Restitution coefficient
+        scalar muH_;
+
+	    //- static Restitution coefficient
+	    scalar mu0_;
+
+	    //- Elasticity angle
+	    scalar alphaE_;
+
+	    //- Restitution angle
+	    scalar alphaMu_;
+
+        //- Wall roughness coefficient
+        scalar gamma_;
+
+        //- Coefficients for the function of e
+        scalar e1_;
+        scalar e2_;
+        scalar e3_;
+
+        //- Coefficients for the function of mu
+        scalar mu1_;
 
 
 public:
@@ -77,7 +98,7 @@ public:
     // Constructor
 
         //- Construct null
-        patchInteractionData();
+        myPatchInteractionData();
 
 
     // Member functions
@@ -88,13 +109,36 @@ public:
             const word& interactionTypeName() const;
 
             //- Return const access to the patch name
-            const keyType& patchName() const;
+            const word& patchName() const;
 
-            //- Return const access to the elasticity coefficient
-            scalar e() const;
+            //- Return const access to the characteristic elasticity coefficient
+            scalar eH() const;
 
-            //- Return const access to the restitution coefficient
-            scalar mu() const;
+            //- Return const access to the static elasticity coefficient
+            scalar e0() const;
+
+            //- Return const access to the characteristic restitution coefficient
+            scalar muH() const;
+
+	        //- Return const access to the static restitution coefficient
+	        scalar mu0() const;
+
+	        //- Return const access to the elasticity angle
+	        scalar alphaE() const;
+	    
+	        //- Return const access to the restitution angle
+	        scalar alphaMu() const;
+
+            //- Return const access to the roughness coefficient
+            scalar gamma() const;
+
+            //- Return const access to the coefficients for e
+            scalar e1() const;
+            scalar e2() const;
+            scalar e3() const;
+
+            //- Return const access to the coefficients for mu
+            scalar mu1() const;
 
 
         // I-O
@@ -103,7 +147,7 @@ public:
             friend Istream& operator>>
             (
                 Istream& is,
-                patchInteractionData& pid
+                myPatchInteractionData& pid
             );
 };
 

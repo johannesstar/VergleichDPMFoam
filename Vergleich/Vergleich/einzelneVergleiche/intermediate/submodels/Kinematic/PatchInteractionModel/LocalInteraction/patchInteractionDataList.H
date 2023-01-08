@@ -1,11 +1,9 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -31,10 +29,10 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef patchInteractionDataList_H
-#define patchInteractionDataList_H
+#ifndef myPatchInteractionDataList_H
+#define myPatchInteractionDataList_H
 
-#include "patchInteractionData.H"
+#include "myPatchInteractionData.H"
 #include "polyMesh.H"
 #include "dictionary.H"
 #include "labelList.H"
@@ -47,9 +45,9 @@ namespace Foam
                   Class patchInteractionDataList Declaration
 \*---------------------------------------------------------------------------*/
 
-class patchInteractionDataList
+class myPatchInteractionDataList
 :
-    public List<patchInteractionData>
+    public List<myPatchInteractionData>
 {
 private:
 
@@ -64,13 +62,13 @@ public:
     // Constructor
 
         //- Construct null
-        patchInteractionDataList();
+        myPatchInteractionDataList();
 
         //- Construct copy
-        patchInteractionDataList(const patchInteractionDataList& pidl);
+        myPatchInteractionDataList(const myPatchInteractionDataList& pidl);
 
         //- Construct from Istream
-        patchInteractionDataList(const polyMesh& mesh, const dictionary& dict);
+        myPatchInteractionDataList(const polyMesh& mesh, const dictionary& dict);
 
 
     // Member functions

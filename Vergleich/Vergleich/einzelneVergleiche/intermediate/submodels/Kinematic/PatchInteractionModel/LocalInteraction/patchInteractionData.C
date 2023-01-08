@@ -1,11 +1,9 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2011 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -25,65 +23,130 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "patchInteractionData.H"
+#include "myPatchInteractionData.H"
 #include "dictionaryEntry.H"
 #include "PatchInteractionModel.H"
 
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
-Foam::patchInteractionData::patchInteractionData()
+Foam::myPatchInteractionData::myPatchInteractionData()
 :
     interactionTypeName_("unknownInteractionTypeName"),
     patchName_("unknownPatch"),
-    e_(0.0),
-    mu_(0.0)
+    eH_(0.0),
+    e0_(0.0),
+    muH_(0.0),
+    mu0_(0.0),
+    alphaE_(0.0),
+    alphaMu_(0.0),
+    gamma_(0.0),
+    e1_(0.0),
+    e2_(0.0),
+    e3_(0.0),
+    mu1_(0.0)
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-const Foam::word& Foam::patchInteractionData::interactionTypeName() const
+const Foam::word& Foam::myPatchInteractionData::interactionTypeName() const
 {
     return interactionTypeName_;
 }
 
 
-const Foam::keyType& Foam::patchInteractionData::patchName() const
+const Foam::word& Foam::myPatchInteractionData::patchName() const
 {
     return patchName_;
 }
 
 
-Foam::scalar Foam::patchInteractionData::e() const
+Foam::scalar Foam::myPatchInteractionData::eH() const
 {
-    return e_;
+    return eH_;
 }
 
-
-Foam::scalar Foam::patchInteractionData::mu() const
+Foam::scalar Foam::myPatchInteractionData::e0() const
 {
-    return mu_;
+    return e0_;
 }
 
+Foam::scalar Foam::myPatchInteractionData::muH() const
+{
+    return muH_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::mu0() const
+{
+    return mu0_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::alphaE() const
+{
+    return alphaE_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::alphaMu() const
+{
+    return alphaMu_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::gamma() const
+{
+    return gamma_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::e1() const
+{
+    return e1_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::e2() const
+{
+    return e2_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::e3() const
+{
+    return e3_;
+}
+
+Foam::scalar Foam::myPatchInteractionData::mu1() const
+{
+    return mu1_;
+}
 
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
 Foam::Istream& Foam::operator>>
 (
     Istream& is,
-    patchInteractionData& pid
+    myPatchInteractionData& pid
 )
 {
-    is.check(FUNCTION_NAME);
+    is.check("Istream& operator>>(Istream&, myPatchInteractionData&)");
 
-    const dictionaryEntry dictEntry(dictionary::null, is);
-    const dictionary& dict = dictEntry.dict();
+    const dictionaryEntry entry(dictionary::null, is);
 
-    pid.patchName_ = dictEntry.keyword();
+    pid.patchName_ = entry.keyword();
+    entry.lookup("type") >> pid.interactionTypeName_;
+    pid.eH_ = entry.lookupOrDefault<scalar>("eH", 1.0);
+    pid.e0_ = entry.lookupOrDefault<scalar>("e0", 1.0);
+    pid.muH_ = entry.lookupOrDefault<scalar>("muH", 0.0);
+    pid.mu0_ = entry.lookupOrDefault<scalar>("mu0", 0.0);
+    pid.alphaE_ = entry.lookupOrDefault<scalar>("alphaE", 0.0);
+    pid.alphaMu_ = entry.lookupOrDefault<scalar>("alphaMu", 0.0);
+    pid.gamma_ = entry.lookupOrDefault<scalar>("gamma",0.0);
+    pid.e1_ = entry.lookupOrDefault<scalar>("e1",0.0);
+    pid.e2_ = entry.lookupOrDefault<scalar>("e2",0.0);
+    pid.e3_ = entry.lookupOrDefault<scalar>("e3",0.0);
+    pid.mu1_ = entry.lookupOrDefault<scalar>("mu1",0.0);
 
-    dict.readEntry("type", pid.interactionTypeName_);
-    pid.e_ = dict.lookupOrDefault<scalar>("e", 1.0);
-    pid.mu_ = dict.lookupOrDefault<scalar>("mu", 0.0);
+//    pid.eH_ = readScalar(entry.lookup("eH"));
+//    pid.muH_ = readScalar(entry.lookup("muH"));
+//    pid.mu0_ = readScalar(entry.lookup("mu0"));
+//    pid.alphaE_ = readScalar(entry.lookup("alphaE"));
+//    pid.alphaMu_ = readScalar(entry.lookup("alphaMu"));
 
     return is;
 }

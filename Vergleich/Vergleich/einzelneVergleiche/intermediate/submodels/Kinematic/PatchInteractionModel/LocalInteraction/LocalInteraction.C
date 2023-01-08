@@ -1,12 +1,9 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2011-2017 OpenFOAM Foundation
-    Copyright (C) 2015-2019 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -26,33 +23,18 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "LocalInteraction.H"
+#include "myLocalInteraction.H"
+#include "fvcCurl.H"
+#include "Random.H"
+#include <fstream>
+#include <math.h>
+#include <iostream>
+using namespace std;
 
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
 template<class CloudType>
-void Foam::LocalInteraction<CloudType>::writeFileHeader(Ostream& os)
-{
-    PatchInteractionModel<CloudType>::writeFileHeader(os);
-
-    forAll(nEscape_, patchi)
-    {
-        const word& patchName = patchData_[patchi].patchName();
-
-        forAll(nEscape_[patchi], injectori)
-        {
-            const word suffix = Foam::name(injectori);
-            this->writeTabbed(os, patchName + "_nEscape_" + suffix);
-            this->writeTabbed(os, patchName + "_massEscape_" + suffix);
-            this->writeTabbed(os, patchName + "_nStick_" + suffix);
-            this->writeTabbed(os, patchName + "_massStick_" + suffix);
-        }
-    }
-}
-
-
-template<class CloudType>
-Foam::LocalInteraction<CloudType>::LocalInteraction
+Foam::myLocalInteraction<CloudType>::myLocalInteraction
 (
     const dictionary& dict,
     CloudType& cloud
@@ -60,24 +42,20 @@ Foam::LocalInteraction<CloudType>::LocalInteraction
 :
     PatchInteractionModel<CloudType>(dict, cloud, typeName),
     patchData_(cloud.mesh(), this->coeffDict()),
-    nEscape_(patchData_.size()),
-    massEscape_(nEscape_.size()),
-    nStick_(nEscape_.size()),
-    massStick_(nEscape_.size()),
+    nEscape_(patchData_.size(), 0),
+    massEscape_(patchData_.size(), 0.0),
+    nStick_(patchData_.size(), 0),
+    massStick_(patchData_.size(), 0.0),
     writeFields_(this->coeffDict().lookupOrDefault("writeFields", false)),
-    injIdToIndex_(),
     massEscapePtr_(nullptr),
     massStickPtr_(nullptr)
 {
-    const bool outputByInjectorId
-        = this->coeffDict().lookupOrDefault("outputByInjectorId", false);
-
     if (writeFields_)
     {
-        Info<< "    Interaction fields will be written to "
-            << this->owner().name() << ":massEscape"
-            << " and "
-            << this->owner().name() << ":massStick" << endl;
+        word massEscapeName(this->owner().name() + ":massEscape");
+        word massStickName(this->owner().name() + ":massStick");
+        Info<< "    Interaction fields will be written to " << massEscapeName
+            << " and " << massStickName << endl;
 
         (void)massEscape();
         (void)massStick();
@@ -87,23 +65,7 @@ Foam::LocalInteraction<CloudType>::LocalInteraction
         Info<< "    Interaction fields will not be written" << endl;
     }
 
-    // Determine the number of injectors and the injector mapping
-    label nInjectors = 0;
-    if (outputByInjectorId)
-    {
-        for (const auto& inj : cloud.injectors())
-        {
-            injIdToIndex_.insert(inj.injectorID(), nInjectors++);
-        }
-    }
-
-    // The normal case, and safety if injector mapping was somehow null.
-    if (!nInjectors)
-    {
-        nInjectors = 1;
-    }
-
-    // Check that interactions are valid/specified
+    // check that interactions are valid/specified
     forAll(patchData_, patchi)
     {
         const word& interactionTypeName =
@@ -121,19 +83,14 @@ Foam::LocalInteraction<CloudType>::LocalInteraction
                 << this->PatchInteractionModel<CloudType>::interactionTypeNames_
                 << nl << exit(FatalError);
         }
-
-        nEscape_[patchi].setSize(nInjectors, Zero);
-        massEscape_[patchi].setSize(nInjectors, Zero);
-        nStick_[patchi].setSize(nInjectors, Zero);
-        massStick_[patchi].setSize(nInjectors, Zero);
     }
 }
 
 
 template<class CloudType>
-Foam::LocalInteraction<CloudType>::LocalInteraction
+Foam::myLocalInteraction<CloudType>::myLocalInteraction
 (
-    const LocalInteraction<CloudType>& pim
+    const myLocalInteraction<CloudType>& pim
 )
 :
     PatchInteractionModel<CloudType>(pim),
@@ -142,17 +99,23 @@ Foam::LocalInteraction<CloudType>::LocalInteraction
     massEscape_(pim.massEscape_),
     nStick_(pim.nStick_),
     massStick_(pim.massStick_),
-    writeFields_(pim.writeFields_),
-    injIdToIndex_(pim.injIdToIndex_),
+    writeFields_(pim.writeFields_), 
     massEscapePtr_(nullptr),
     massStickPtr_(nullptr)
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+template<class CloudType>
+Foam::myLocalInteraction<CloudType>::~myLocalInteraction()
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 template<class CloudType>
-Foam::volScalarField& Foam::LocalInteraction<CloudType>::massEscape()
+Foam::volScalarField& Foam::myLocalInteraction<CloudType>::massEscape()
 {
     if (!massEscapePtr_.valid())
     {
@@ -171,17 +134,17 @@ Foam::volScalarField& Foam::LocalInteraction<CloudType>::massEscape()
                     IOobject::AUTO_WRITE
                 ),
                 mesh,
-                dimensionedScalar(dimMass, Zero)
+                dimensionedScalar("zero", dimMass, 0.0)
             )
         );
     }
 
-    return *massEscapePtr_;
+    return massEscapePtr_();
 }
 
 
 template<class CloudType>
-Foam::volScalarField& Foam::LocalInteraction<CloudType>::massStick()
+Foam::volScalarField& Foam::myLocalInteraction<CloudType>::massStick()
 {
     if (!massStickPtr_.valid())
     {
@@ -200,42 +163,37 @@ Foam::volScalarField& Foam::LocalInteraction<CloudType>::massStick()
                     IOobject::AUTO_WRITE
                 ),
                 mesh,
-                dimensionedScalar(dimMass, Zero)
+                dimensionedScalar("zero", dimMass, 0.0)
             )
         );
     }
 
-    return *massStickPtr_;
+    return massStickPtr_();
 }
 
 
 template<class CloudType>
-bool Foam::LocalInteraction<CloudType>::correct
+bool Foam::myLocalInteraction<CloudType>::correct
 (
     typename CloudType::parcelType& p,
     const polyPatch& pp,
     bool& keepParticle
 )
 {
-    const label patchi = patchData_.applyToPatch(pp.index());
+    label patchi = patchData_.applyToPatch(pp.index());
 
     if (patchi >= 0)
     {
         vector& U = p.U();
-
-        // Location for storing the stats.
-        const label idx =
-        (
-            injIdToIndex_.size()
-          ? injIdToIndex_.lookup(p.typeId(), 0)
-          : 0
-        );
+        vector& parcelCurl = p.parcelCurl();
+	    scalar& dParcel = p.d();      
+//        bool& active = p.active();
 
         typename PatchInteractionModel<CloudType>::interactionType it =
-            this->wordToInteractionType
-            (
-                patchData_[patchi].interactionTypeName()
-            );
+        this->wordToInteractionType
+        (
+            patchData_[patchi].interactionTypeName()
+        );
 
         switch (it)
         {
@@ -245,38 +203,34 @@ bool Foam::LocalInteraction<CloudType>::correct
             }
             case PatchInteractionModel<CloudType>::itEscape:
             {
+                scalar dm = p.mass()*p.nParticle();
+
                 keepParticle = false;
                 p.active(false);
                 U = Zero;
-
-                const scalar dm = p.mass()*p.nParticle();
-
-                nEscape_[patchi][idx]++;
-                massEscape_[patchi][idx] += dm;
-
+                nEscape_[patchi]++;
+                massEscape_[patchi] += dm;
                 if (writeFields_)
                 {
-                    const label pI = pp.index();
-                    const label fI = pp.whichFace(p.face());
+                    label pI = pp.index();
+                    label fI = pp.whichFace(p.face());
                     massEscape().boundaryFieldRef()[pI][fI] += dm;
                 }
                 break;
             }
             case PatchInteractionModel<CloudType>::itStick:
             {
+                scalar dm = p.mass()*p.nParticle();
+
                 keepParticle = true;
                 p.active(false);
                 U = Zero;
-
-                const scalar dm = p.mass()*p.nParticle();
-
-                nStick_[patchi][idx]++;
-                massStick_[patchi][idx] += dm;
-
+                nStick_[patchi]++;
+                massStick_[patchi] += dm;
                 if (writeFields_)
                 {
-                    const label pI = pp.index();
-                    const label fI = pp.whichFace(p.face());
+                    label pI = pp.index();
+                    label fI = pp.whichFace(p.face());
                     massStick().boundaryFieldRef()[pI][fI] += dm;
                 }
                 break;
@@ -294,17 +248,101 @@ bool Foam::LocalInteraction<CloudType>::correct
                 // Calculate motion relative to patch velocity
                 U -= Up;
 
-                scalar Un = U & nw;
-                vector Ut = U - Un*nw;
-
-                if (Un > 0)
+		        // Betrag und Richtung der Geschwindigkeit bestimmen
+		        const scalar magU = mag(U);
+                /*if (magU == 0)
                 {
-                    U -= (1.0 + patchData_[patchi].e())*Un*nw;
+                    cout << "magU hat den Wert 0 angenommen." << nl;
+                }*/
+		        const vector Udir = U/max(magU,1e-9);
+		        const scalar alpha = mathematical::pi/2.0 - acos(nw & Udir);
+
+                Random& rnd = this->owner().rndGen();
+
+                const scalar alphaCorr = patchData_[patchi].gamma() * rnd.GaussNormal<scalar>();
+
+                const scalar alpha1 = max((alpha + alphaCorr),0);
+
+                scalar Un = U & nw;
+                //scalar UnOld = Un;
+                vector Ut = U - Un*nw;
+		        scalar Utabs = mag(Ut);
+		        scalar e;
+		        scalar mu;
+		        
+                scalar epsilon0 = sign(mag(Ut)-0.5*dParcel*mag(parcelCurl));
+                /*
+                ofstream file4("epsilon0.dat", ios::out|ios::app);
+    		    file4 << epsilon0 << nl;
+    		    file4.close();
+                
+                ofstream file("alpha.dat", ios::out|ios::app);
+    		    file << alpha << nl;
+    		    file.close();
+                */
+		        if (alpha1 == 0)
+                {
+                    e = patchData_[patchi].e0();
+                    //cout << "Alpha hat den Wert 0 angenommen." << nl;
                 }
+                else if (alpha1 < patchData_[patchi].alphaE())
+		        {
+			        e = patchData_[patchi].e0() - ((patchData_[patchi].e0()-patchData_[patchi].eH())/patchData_[patchi].alphaE())*alpha1;
+                    /*ofstream file("e.dat", ios::out|ios::app);
+	                file << e << nl;
+        	        file.close();*/
+		        }
+		        else 
+		        {	
+			        e = patchData_[patchi].eH();
+                    /*ofstream file("e.dat", ios::out|ios::app);
+                    file << e << nl;
+                    file.close();*/
+		        }
 
-                U -= patchData_[patchi].mu()*Ut;
+                // e = patchData_[patchi].e0() - (patchData_[patchi].e1() * alpha1) + (patchData_[patchi].e2() * sqr(alpha1)) - (patchData_[patchi].e3() * pow(alpha1 ,3));
+                // mu = max(patchData_[patchi].muH(), patchData_[patchi].mu0() - (patchData_[patchi].mu1() * alpha1));
 
-                // Return velocity to global space
+                if (alpha1 == 0)
+                {
+                    mu = patchData_[patchi].mu0();
+                }
+		        else if (alpha1 < patchData_[patchi].alphaMu())
+		        {
+			        mu = patchData_[patchi].mu0() - ((patchData_[patchi].mu0() - patchData_[patchi].muH())/patchData_[patchi].alphaMu()) * alpha1;
+ 			        /*ofstream file("mu.dat", ios::out|ios::app);
+                    file << mu << nl;
+                    file.close();*/                   
+		        }
+		        else
+		        {
+			        mu = patchData_[patchi].muH();
+                    /*ofstream file("mu.dat", ios::out|ios::app);
+                    file << mu << nl;
+                    file.close();*/
+		        }
+
+		        if (Un > 0)
+		        {
+			        //U -= (1.0 + patchData_[patchi].eH())*Un*nw;
+			        U -= (1.0 + e)*Un*nw;
+		        }
+
+                //U -= patchData_[patchi].muH()*(1.0 + patchData_[patchi].eH())*Un*Ut/Utabs;
+		        /*if (Utabs == 0)
+                {
+                    cout << "Utabs hat den Wert 0 angenommen." << nl;
+                }*/
+                U -= mu*(1.0 + e)*epsilon0*Un*Ut/max(Utabs,1e-9);
+
+		        parcelCurl += 5*mu*(1.0 + e)*Un*1/dParcel*epsilon0*(Ut/max(Utabs,1e-9) ^ nw);
+
+                /*
+                const scalar magUNew = mag(U);
+                const vector UdirNew = U/magUNew;
+                const scalar alphaNew = mathematical::pi/2.0 - acos(nw & UdirNew);
+                */
+		        //scalar fricCoeff = (abs((cos(alpha) * magU) - (cos(alphaNew) * magUNew)))/((1+e)*UnOld);
                 U += Up;
 
                 break;
@@ -329,127 +367,62 @@ bool Foam::LocalInteraction<CloudType>::correct
 
 
 template<class CloudType>
-void Foam::LocalInteraction<CloudType>::info(Ostream& os)
+void Foam::myLocalInteraction<CloudType>::info(Ostream& os)
 {
-    PatchInteractionModel<CloudType>::info(os);
-
     // retrieve any stored data
-    labelListList npe0(patchData_.size());
-    scalarListList mpe0(patchData_.size());
-    labelListList nps0(patchData_.size());
-    scalarListList mps0(patchData_.size());
-    
-    forAll(patchData_, patchi)
-    {
-        label lsd = nEscape_[patchi].size();
-        npe0[patchi].setSize(lsd, Zero);
-        mpe0[patchi].setSize(lsd, Zero);
-        nps0[patchi].setSize(lsd, Zero);
-        mps0[patchi].setSize(lsd, Zero);
-    }
+    labelList npe0(patchData_.size(), 0);
+    this->getModelProperty("nEscape", npe0);
 
-    
-    this->getModelProperty("nEscape", npe0);   
+    scalarList mpe0(patchData_.size(), 0.0);
     this->getModelProperty("massEscape", mpe0);
+
+    labelList nps0(patchData_.size(), 0);
     this->getModelProperty("nStick", nps0);
+
+    scalarList mps0(patchData_.size(), 0.0);
     this->getModelProperty("massStick", mps0);
 
     // accumulate current data
-    labelListList npe(nEscape_);
-    forAll(npe, i)
+    labelList npe(nEscape_);
+    Pstream::listCombineGather(npe, plusEqOp<label>());
+    npe = npe + npe0;
+
+    scalarList mpe(massEscape_);
+    Pstream::listCombineGather(mpe, plusEqOp<scalar>());
+    mpe = mpe + mpe0;
+
+    labelList nps(nStick_);
+    Pstream::listCombineGather(nps, plusEqOp<label>());
+    nps = nps + nps0;
+
+    scalarList mps(massStick_);
+    Pstream::listCombineGather(mps, plusEqOp<scalar>());
+    mps = mps + mps0;
+
+
+    forAll(patchData_, i)
     {
-        Pstream::listCombineGather(npe[i], plusEqOp<label>());
-        npe[i] = npe[i] + npe0[i];
+        os  << "    Parcel fate (number, mass)      : patch "
+            <<  patchData_[i].patchName() << nl
+            << "      - escape                      = " << npe[i]
+            << ", " << mpe[i] << nl
+            << "      - stick                       = " << nps[i]
+            << ", " << mps[i] << nl;
     }
-
-    scalarListList mpe(massEscape_);
-    forAll(mpe, i)
-    {
-        Pstream::listCombineGather(mpe[i], plusEqOp<scalar>());
-        mpe[i] = mpe[i] + mpe0[i];
-    }
-
-    labelListList nps(nStick_);
-    forAll(nps, i)
-    {
-        Pstream::listCombineGather(nps[i], plusEqOp<label>());
-        nps[i] = nps[i] + nps0[i];
-    }
-
-    scalarListList mps(massStick_);
-    forAll(nps, i)
-    {
-        Pstream::listCombineGather(mps[i], plusEqOp<scalar>());
-        mps[i] = mps[i] + mps0[i];
-    }
-
-    if (injIdToIndex_.size())
-    {
-        // Since injIdToIndex_ is a one-to-one mapping (starting at zero),
-        // can simply invert it.
-        labelList indexToInjector(injIdToIndex_.size());
-        forAllConstIters(injIdToIndex_, iter)
-        {
-            indexToInjector[iter.val()] = iter.key();
-        }
-
-        forAll(patchData_, patchi)
-        {
-            forAll(mpe[patchi], indexi)
-            {
-                const word& patchName = patchData_[patchi].patchName();
-
-                os  << "    Parcel fate: patch " <<  patchName
-                    << " (number, mass)" << nl
-                    << "      - escape  (injector " << indexToInjector[indexi]
-                    << " )  = " << npe[patchi][indexi]
-                    << ", " << mpe[patchi][indexi] << nl
-                    << "      - stick   (injector " << indexToInjector[indexi]
-                    << " )  = " << nps[patchi][indexi]
-                    << ", " << mps[patchi][indexi] << nl;
-            }
-        }
-    }
-    else
-    {
-        forAll(patchData_, patchi)
-        {
-            const word& patchName = patchData_[patchi].patchName();
-
-            os  << "    Parcel fate: patch " << patchName
-                << " (number, mass)" << nl
-                << "      - escape                      = "
-                << npe[patchi][0] << ", " << mpe[patchi][0] << nl
-                << "      - stick                       = "
-                << nps[patchi][0] << ", " << mps[patchi][0] << nl;
-        }
-    }
-
-    forAll(npe, patchi)
-    {
-        forAll(npe[patchi], injectori)
-        {
-            this->file()
-                << tab << npe[patchi][injectori]
-                << tab << mpe[patchi][injectori]
-                << tab << nps[patchi][injectori]
-                << tab << mps[patchi][injectori];
-        }
-    }
-
-    this->file() << endl;
 
     if (this->writeTime())
     {
         this->setModelProperty("nEscape", npe);
-        this->setModelProperty("massEscape", mpe);
-        this->setModelProperty("nStick", nps);
-        this->setModelProperty("massStick", mps);
+        nEscape_ = 0;
 
-        nEscape_ = Zero;
-        massEscape_ = Zero;
-        nStick_ = Zero;
-        massStick_ = Zero;
+        this->setModelProperty("massEscape", mpe);
+        massEscape_ = 0.0;
+
+        this->setModelProperty("nStick", nps);
+        nStick_ = 0;
+
+        this->setModelProperty("massStick", mps);
+        massStick_ = 0.0;
     }
 }
 

@@ -1,11 +1,9 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2011-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -25,29 +23,31 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "patchInteractionDataList.H"
+#include "myPatchInteractionDataList.H"
+#include "stringListOps.H"
 #include "emptyPolyPatch.H"
+#include "cyclicAMIPolyPatch.H"
 
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
-Foam::patchInteractionDataList::patchInteractionDataList()
+Foam::myPatchInteractionDataList::myPatchInteractionDataList()
 :
-    List<patchInteractionData>(),
+    List<myPatchInteractionData>(),
     patchGroupIDs_()
 {}
 
 
-Foam::patchInteractionDataList::patchInteractionDataList
+Foam::myPatchInteractionDataList::myPatchInteractionDataList
 (
     const polyMesh& mesh,
     const dictionary& dict
 )
 :
-    List<patchInteractionData>(dict.lookup("patches")),
+    List<myPatchInteractionData>(dict.lookup("patches")),
     patchGroupIDs_(this->size())
 {
     const polyBoundaryMesh& bMesh = mesh.boundaryMesh();
-    const List<patchInteractionData>& items = *this;
+    const List<myPatchInteractionData>& items = *this;
     forAllReverse(items, i)
     {
         const keyType& patchName = items[i].patchName();
@@ -89,19 +89,19 @@ Foam::patchInteractionDataList::patchInteractionDataList
 }
 
 
-Foam::patchInteractionDataList::patchInteractionDataList
+Foam::myPatchInteractionDataList::myPatchInteractionDataList
 (
-    const patchInteractionDataList& pidl
+    const myPatchInteractionDataList& pidl
 )
 :
-    List<patchInteractionData>(pidl),
+    List<myPatchInteractionData>(pidl),
     patchGroupIDs_(pidl.patchGroupIDs_)
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-Foam::label Foam::patchInteractionDataList::applyToPatch(const label id) const
+Foam::label Foam::myPatchInteractionDataList::applyToPatch(const label id) const
 {
     forAll(patchGroupIDs_, groupI)
     {

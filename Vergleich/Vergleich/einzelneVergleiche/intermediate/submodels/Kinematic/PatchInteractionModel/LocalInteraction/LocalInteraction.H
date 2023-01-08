@@ -1,12 +1,9 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2011-2017 OpenFOAM Foundation
-    Copyright (C) 2018-2019 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -27,62 +24,55 @@ License
 Class
     Foam::LocalInteraction
 
-Group
-    grpLagrangianIntermediatePatchInteractionSubModels
-
 Description
     Patch interaction specified on a patch-by-patch basis
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef LocalInteraction_H
-#define LocalInteraction_H
+#ifndef myLocalInteraction_H
+#define myLocalInteraction_H
 
 #include "PatchInteractionModel.H"
-#include "patchInteractionDataList.H"
+#include "myPatchInteractionDataList.H"
 #include "Switch.H"
+#include "Random.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
 /*---------------------------------------------------------------------------*\
                       Class LocalInteraction Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CloudType>
-class LocalInteraction
+class myLocalInteraction
 :
     public PatchInteractionModel<CloudType>
 {
     // Private data
 
         //- List of participating patches
-        const patchInteractionDataList patchData_;
+        const myPatchInteractionDataList patchData_;
 
 
-        // Bookkeeping for particle fates
+        // Counters for particle fates
 
             //- Number of parcels escaped
-            List<List<label>> nEscape_;
+            List<label> nEscape_;
 
             //- Mass of parcels escaped
-            List<List<scalar>> massEscape_;
+            List<scalar> massEscape_;
 
             //- Number of parcels stuck to patches
-            List<List<label>> nStick_;
+            List<label> nStick_;
 
             //- Mass of parcels stuck to patches
-            List<List<scalar>> massStick_;
+            List<scalar> massStick_;
 
 
         //- Flag to output data as fields
-        bool writeFields_;
-
-        //- InjectorId to index map, when outputting escaped/stick/...
-        //  particles sorted by injectorID
-        Map<label> injIdToIndex_;
+        Switch writeFields_;
 
         //- Mass escape field
         autoPtr<volScalarField> massEscapePtr_;
@@ -90,41 +80,32 @@ class LocalInteraction
         //- Mass stick field
         autoPtr<volScalarField> massStickPtr_;
 
-
-protected:
-
-    // Protected Member Functions
-
-        //- Output file header information
-        virtual void writeFileHeader(Ostream& os);
-
-
 public:
 
     //- Runtime type information
-    TypeName("localInteraction");
+    TypeName("myLocalInteraction");
 
 
     // Constructors
 
         //- Construct from dictionary
-        LocalInteraction(const dictionary& dict, CloudType& owner);
+        myLocalInteraction(const dictionary& dict, CloudType& owner);
 
         //- Construct copy from owner cloud and patch interaction model
-        LocalInteraction(const LocalInteraction<CloudType>& pim);
+        myLocalInteraction(const myLocalInteraction<CloudType>& pim);
 
         //- Construct and return a clone using supplied owner cloud
         virtual autoPtr<PatchInteractionModel<CloudType>> clone() const
         {
             return autoPtr<PatchInteractionModel<CloudType>>
             (
-                new LocalInteraction<CloudType>(*this)
+                new myLocalInteraction<CloudType>(*this)
             );
         }
 
 
     //- Destructor
-    virtual ~LocalInteraction() = default;
+    virtual ~myLocalInteraction();
 
 
     // Member Functions
@@ -144,9 +125,10 @@ public:
             bool& keepParticle
         );
 
+        // I-O
 
-        //- Write patch interaction info to stream
-        virtual void info(Ostream& os);
+            //- Write patch interaction info to stream
+            virtual void info(Ostream& os);
 };
 
 
@@ -157,7 +139,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #ifdef NoRepository
-    #include "LocalInteraction.C"
+    #include "myLocalInteraction.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
