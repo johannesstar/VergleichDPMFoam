@@ -1,0 +1,54 @@
+Anmerkung: MPPICFoam, DPMTurbulenceModels, Make nicht verglichen
+
+
+
+
+DPMDyMFoam zu extDPMDyMFoam neben anderen Namen: einzig bei pEqn.H noch explizite Druckrelaxierung fvOptions.correct(Uc);
+  -> daher bei extDPMDyMFoam noch #include "fvOptions.H" nötig
+
+
+
+  
+DPMFoam zu extDPMFoam neben anderen Namen: in UcEqn.H noch fvOptions.correct(Uc); und fvOptions.constrain(UcEqn); sowie in der UGleichung auf der rechten Seite + fvOptions(Uc) hinzugefügt
+  -> in extDPMFoam #include "fvOptions.H" nötig
+  Zudem #include "wallFvPatch.H" und #include "wallDist.H" für Auswertung der Erosion?warum
+  
+
+
+
+
+
+
+intermediate: nichts geändert in clouds, conversion, doc, include, integrationScheme und phaseProperties
+
+
+intermediate Include: statt den Pfaden in den Include Dateien (z.B ../submodels/MPPIC/CorrectionLimitingMethods/absolute/absolute.C in absolute.C) die ganze Datei hinzugefügt (in Git ignoriert da nicht relevant für den Vergleich)
+->die PartikelErosions Modelle, die MagnusKraft und die myInteraction sind neu hinzugefügt stehen aber nochmal in den dazugehörigen Ordnern->siehe unten
+
+
+
+intermediate parcels zu extintermediate parcels:
+in /include: 
+->die Erosionsmodelle in makeParcelCloudFunctionObjects.H  hinzufügen mit #include "Finnie.H" .... und dann in define mit makeCloudFunctionObjectType(Finnie, CloudType); ..... 
+
+->die Magnuskraft in makeParcelForces.H  mit #include "MagnusForce.H" und in define mit makeParticleForceModelType(MagnusForce, CloudType); hinzugefügt
+    -> dies ebenso in makeThermoParcelForces.H    
+->die neue PatchInteraction (myLocalInteraction) wird in makeParcelPatchInteractionModels.H mit #include "myLocalInteraction.H" und in define mit makePatchInteractionModelType(myLocalInteraction, CloudType); hinzugefügt
+
+in /Templates/KinematicParcel:
+->Partikelrotation/Curl (nötig für MagnusKraft?)  wird in KinematicParcel.C berechnet/definiert und ist dementsprechend noch in KinematicParcel.H, KinematicParcell.H und KinematicParcellO.C hinzugefügt
+
+
+
+intermediate submodels: nichts geändert in addOns, HeterogeneousReactingModel, MPPIC, Reacting, ReactingMultiphase, Thermodynamic
+
+in submodels/CloudFunctionObjects:-> die Definition der verschiedenen Partikelerosionsmodelle hinzugefügt (Arabnejad, Bitter, Finnie, FinnieExtended, NeilsonGilchrist, Oka) 
+ -> Code design an submodels/CloudFunctionObjects/ParticleErosion orientiert
+ 
+in submodels/ForceTypes: Geschwindigkeitsrotation/Curl hinzugefügt
+
+in submodels/Kinematic/InjectionModel: bei Patch(FlowRate)Injection eine zufällige Geschwindigkeitsfluktation hinzugefügt?warum
+
+in submodels/Kinematic/ParticleForces: MagnusKraft hinzugefügt (hierbei Curl nötig), Liftforce angepasst mit neuem Curl?warum
+
+in submodels/Kinematic/PatchInteractionModel: Sommerfeld Model eingestellt statt normalen Model
