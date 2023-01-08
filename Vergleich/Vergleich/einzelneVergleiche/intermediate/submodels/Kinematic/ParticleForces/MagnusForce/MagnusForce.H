@@ -1,11 +1,9 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2012-2017 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -24,22 +22,15 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::LiftForce
-
-Group
-    grpLagrangianIntermediateForceSubModels
+    Foam::MagnusForce 
 
 Description
-    Base class for particle lift force models
-
-SourceFiles
-    LiftForceI.H
-    LiftForce.C
+    Drag model based on assumption of solid spheres
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef LiftForce_H
-#define LiftForce_H
+#ifndef MagnusForce_H
+#define MagnusForce_H
 
 #include "ParticleForce.H"
 #include "volFields.H"
@@ -49,84 +40,76 @@ SourceFiles
 
 namespace Foam
 {
-
 /*---------------------------------------------------------------------------*\
-                          Class LiftForce Declaration
-\*---------------------------------------------------------------------------*/
+                       Class MagnusForce  Declaration
+\*----------------------------------------------SphereDragForce-----------------------------*/
 
 template<class CloudType>
-class LiftForce
+class MagnusForce 
 :
     public ParticleForce<CloudType>
 {
 protected:
-
-    // Protected data
+    // Private Member Functions
 
         //- Name of velocity field
         const word UName_;
 
-        //- Curl of carrier phase velocity interpolator
+        //- Curk of carrier phase velocity interpolator
         autoPtr<interpolation<vector>> curlUcInterpPtr_;
 
-
-    // Protected Member Functions
-
-        //- Calculate the lift coefficient
-        virtual scalar Cl
+        virtual scalar ClR
         (
             const typename CloudType::parcelType& p,
             const typename CloudType::parcelType::trackingData& td,
-            const vector& curlUc,
-            const scalar Re,
-            const scalar muc
-        ) const;
-
+            const vector Omega
+        )const;
 
 public:
+
+    //- Runtime type information
+    TypeName("MagnusForce");
+
 
     // Constructors
 
         //- Construct from mesh
-        LiftForce
+        MagnusForce 
         (
             CloudType& owner,
             const fvMesh& mesh,
-            const dictionary& dict,
-            const word& forceType
+            const dictionary& dict
         );
 
         //- Construct copy
-        LiftForce(const LiftForce& lf);
+        MagnusForce (const MagnusForce <CloudType>& df);
 
         //- Construct and return a clone
         virtual autoPtr<ParticleForce<CloudType>> clone() const
         {
             return autoPtr<ParticleForce<CloudType>>
             (
-                new LiftForce<CloudType>(*this)
+                new MagnusForce <CloudType>(*this)
             );
         }
 
 
     //- Destructor
-    virtual ~LiftForce();
+    virtual ~MagnusForce ();
 
+    // Access
+
+        //- Return the curl of the carrier phase velocity interpolator
+        inline const interpolation<vector>& curlUcInterp() const;
 
     // Member Functions
-
-        // Access
-
-            //- Return the curl of the carrier phase velocity interpolator
-            inline const interpolation<vector>& curlUcInterp() const;
-
 
         // Evaluation
 
             //- Cache fields
             virtual void cacheFields(const bool store);
 
-            //- Calculate the non-coupled force
+            //- Calculate the coupled force
             virtual forceSuSp calcCoupled
             (
                 const typename CloudType::parcelType& p,
@@ -135,11 +118,6 @@ public:
                 const scalar mass,
                 const scalar Re,
                 const scalar muc
-            ) const;
-
-            virtual vector getcurlUc
-            (
-                const typename CloudType::parcelType& p
             ) const;
 };
 
@@ -150,10 +128,10 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "LiftForceI.H"
+#include "MagnusForceI.H"
 
 #ifdef NoRepository
-    #include "LiftForce.C"
+    #include "MagnusForce.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -124,7 +124,15 @@ Foam::scalar Foam::ParticleForce<CloudType>::massAdd
     return 0.0;
 }
 
-
+template<class CloudType>
+Foam::vector Foam::ParticleForce<CloudType>::getcurlUc
+(
+    const typename CloudType::parcelType& p
+) const
+{
+    vector value = Zero;
+    return value;
+}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "ParticleForceNew.C"

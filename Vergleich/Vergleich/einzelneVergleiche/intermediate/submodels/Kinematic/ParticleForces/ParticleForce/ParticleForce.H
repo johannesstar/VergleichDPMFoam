@@ -185,6 +185,12 @@ public:
                 const typename CloudType::parcelType::trackingData& td,
                 const scalar mass
             ) const;
+
+            virtual vector getcurlUc
+            (
+                const typename CloudType::parcelType& p
+            ) const;
+
 };
 
 

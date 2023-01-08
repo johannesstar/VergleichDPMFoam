@@ -1,12 +1,10 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
--------------------------------------------------------------------------------
-    Copyright (C) 2012-2017 OpenFOAM Foundation
--------------------------------------------------------------------------------
+-------------------------------------------------------------------------------Einleitung/H
 License
     This file is part of OpenFOAM.
 
@@ -25,63 +23,65 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "LiftForce.H"
+#include "MagnusForce.H"
 #include "fvcCurl.H"
+#include <iostream>
 
-// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
+using namespace std;
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class CloudType>
-Foam::scalar Foam::LiftForce<CloudType>::LiftForce::Cl
+Foam::scalar Foam::MagnusForce<CloudType>::ClR
 (
     const typename CloudType::parcelType& p,
     const typename CloudType::parcelType::trackingData& td,
-    const vector& curlUc,
-    const scalar Re,
-    const scalar muc
+    const vector Omega
 ) const
 {
-    // dummy
-    return 0.0;
-}
 
+    return (p.d()*mag(Omega))/(mag(td.Uc() - p.U()));
+}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
-Foam::LiftForce<CloudType>::LiftForce
+Foam::MagnusForce<CloudType>::MagnusForce
 (
     CloudType& owner,
     const fvMesh& mesh,
-    const dictionary& dict,
-    const word& forceType
+    const dictionary& dict
 )
 :
-    ParticleForce<CloudType>(owner, mesh, dict, forceType, true),
+    ParticleForce<CloudType>(owner, mesh, dict, typeName, true),
     UName_(this->coeffs().template lookupOrDefault<word>("U", "U")),
     curlUcInterpPtr_(nullptr)
 {}
 
 
 template<class CloudType>
-Foam::LiftForce<CloudType>::LiftForce(const LiftForce& lf)
+Foam::MagnusForce<CloudType>::MagnusForce
+(
+    const MagnusForce<CloudType>& mf
+)
 :
-    ParticleForce<CloudType>(lf),
-    UName_(lf.UName_),
+    ParticleForce<CloudType>(mf),
+    UName_(mf.UName_),
     curlUcInterpPtr_(nullptr)
 {}
 
 
-// * * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class CloudType>
-Foam::LiftForce<CloudType>::~LiftForce()
+Foam::MagnusForce<CloudType>::~MagnusForce()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-void Foam::LiftForce<CloudType>::cacheFields(const bool store)
+void Foam::MagnusForce<CloudType>::cacheFields(const bool store)
 {
     static word fName("curlUcDt");
 
@@ -118,17 +118,16 @@ void Foam::LiftForce<CloudType>::cacheFields(const bool store)
 
         if (fieldExists)
         {
-            volVectorField& curlUc =
-                this->mesh().template lookupObjectRef<volVectorField>(fName);
+            const volVectorField& curlUc = this->mesh().template
+                lookupObject<volVectorField>(fName);
 
-            curlUc.checkOut();
+            const_cast<volVectorField&>(curlUc).checkOut();
         }
     }
 }
 
-
 template<class CloudType>
-Foam::forceSuSp Foam::LiftForce<CloudType>::calcCoupled
+Foam::forceSuSp Foam::MagnusForce<CloudType>::calcCoupled
 (
     const typename CloudType::parcelType& p,
     const typename CloudType::parcelType::trackingData& td,
@@ -138,29 +137,16 @@ Foam::forceSuSp Foam::LiftForce<CloudType>::calcCoupled
     const scalar muc
 ) const
 {
-    forceSuSp value(Zero);
+    forceSuSp value(Zero, 0.0);
 
     vector curlUc =
-        curlUcInterp().interpolate(p.coordinates(), p.currentTetIndices());
+    curlUcInterp().interpolate(p.coordinates(), p.currentTetIndices());
 
-    scalar Cl = this->Cl(p, td, curlUc, Re, muc);
+    const vector Omega = 0.5 * curlUc - p.parcelCurl();
 
-    value.Su() = mass/p.rho()*td.rhoc()*Cl*((td.Uc() - p.U())^curlUc);
+    value.Su() = td.rhoc()/2 * mathematical::pi/4 * sqr(p.d()) * ClR(p,td,Omega) * mag(td.Uc() - p.U()) * (Omega ^ (td.Uc() - p.U()) / max(mag(Omega),1e-5));
 
     return value;
-}
-
-template<class CloudType>
-Foam::vector Foam::LiftForce<CloudType>::getcurlUc
-(
-    const typename CloudType::parcelType& p
-) const
-{
-
-    vector curlUc =
-        curlUcInterp().interpolate(p.coordinates(), p.currentTetIndices());
-
-    return curlUc;
 }
 
 
