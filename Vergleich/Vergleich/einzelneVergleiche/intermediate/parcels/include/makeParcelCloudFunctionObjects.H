@@ -36,7 +36,9 @@ License
 #include "Finnie.H"
 #include "FinnieExtended.H"
 #include "Bitter.H"
+#include "Bitter2.H"//hinzugefügt
 #include "Arabnejad.H"
+#include "Arabnejad2.H"//hinzugefügt
 #include "NeilsonGilchrist.H"
 #include "Oka.H"
 #include "ParticleTracks.H"
@@ -44,6 +46,7 @@ License
 #include "PatchCollisionDensity.H"
 #include "PatchPostProcessing.H"
 #include "VoidFraction.H"
+#include "myArab.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,7 +60,10 @@ License
     makeCloudFunctionObjectType(Finnie, CloudType);                            \
     makeCloudFunctionObjectType(FinnieExtended, CloudType);                    \
     makeCloudFunctionObjectType(Bitter, CloudType);                            \
+    makeCloudFunctionObjectType(Bitter2, CloudType);                           \
     makeCloudFunctionObjectType(Arabnejad, CloudType);                         \
+    makeCloudFunctionObjectType(Arabnejad2, CloudType);                        \
+    makeCloudFunctionObjectType(myArab, CloudType);				  \
     makeCloudFunctionObjectType(NeilsonGilchrist, CloudType);                  \
     makeCloudFunctionObjectType(Oka, CloudType);                               \
     makeCloudFunctionObjectType(ParticleTracks, CloudType);                    \
