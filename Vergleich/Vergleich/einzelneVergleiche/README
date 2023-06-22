@@ -1,0 +1,2 @@
+In Druck und U Eqn ist die Abhängigkeit von dem lokalen Volumenanteil entfernt. Diese führt bei feinem Gitter und großen Partikeln zum Abbruch der Simulation.
+->Für normales Verhalten P und U original Daten wieder umbennen

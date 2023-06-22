@@ -98,9 +98,8 @@ int main(int argc, char *argv[])
         kinematicCloud.evolve();
 
         // Update continuous phase volume fraction field
-        //alphac = max(1.0 - kinematicCloud.theta(), alphacMin);
-	alphac = 1.0;//nicht durch partikel beinflussenlassen  
-	alphac.correctBoundaryConditions();
+        alphac = max(1.0 - kinematicCloud.theta(), alphacMin);
+        alphac.correctBoundaryConditions();
         alphacf = fvc::interpolate(alphac);
         alphaPhic = alphacf*phic;
 
