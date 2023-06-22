@@ -37,7 +37,7 @@ License
 #include "makeParcelStochasticCollisionModels.H"
 #include "makeReactingParcelSurfaceFilmModels.H" // Reacting variant
 #include "makeHeterogeneousReactingParcelHeterogeneousReactingModels.H"
-
+#include "makeParcelTurbulenceDispersionModels.H"
 // Thermodynamic
 #include "makeParcelHeatTransferModels.H"
 
@@ -56,7 +56,7 @@ makeReactingParcelInjectionModels(basicHeterogeneousReactingCloud);
 makeParcelPatchInteractionModels(basicHeterogeneousReactingCloud);
 makeParcelStochasticCollisionModels(basicHeterogeneousReactingCloud);
 makeReactingParcelSurfaceFilmModels(basicHeterogeneousReactingCloud);
-
+makeParcelTurbulenceDispersionModels(basicHeterogeneousReactingCloud);
 // Thermo sub-models
 makeParcelHeatTransferModels(basicHeterogeneousReactingCloud);
 

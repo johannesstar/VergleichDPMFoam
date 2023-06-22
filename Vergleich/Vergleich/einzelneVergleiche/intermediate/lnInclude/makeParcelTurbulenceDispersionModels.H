@@ -5,7 +5,7 @@
     \\  /    A nd           | www.openfoam.com
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
-    Copyright (C) 2011-2015 OpenFOAM Foundation
+    Copyright (C) 2011-2016 OpenFOAM Foundation
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -25,35 +25,31 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "basicThermoCloud.H"
-
-#include "makeParcelCloudFunctionObjects.H"
-
-// Kinematic
-#include "makeThermoParcelForces.H" // thermo variant
-#include "makeParcelDispersionModels.H"
-#include "makeParcelInjectionModels.H"
-#include "makeParcelPatchInteractionModels.H"
-#include "makeParcelStochasticCollisionModels.H"
-#include "makeThermoParcelSurfaceFilmModels.H" // thermo variant
-#include "makeParcelTurbulenceDispersionModels.H"
-// Thermodynamic
-#include "makeParcelHeatTransferModels.H"
+#ifndef makeParcelTurbulenceDispersionModels_H
+#define makeParcelTurbulenceDispersionModels_H
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-makeParcelCloudFunctionObjects(basicThermoCloud);
+#include "GradientDispersionRAS.H"
+#include "StochasticDispersionRAS.H"
 
-// Kinematic sub-models
-makeThermoParcelForces(basicThermoCloud);
-makeParcelDispersionModels(basicThermoCloud);
-makeParcelInjectionModels(basicThermoCloud);
-makeParcelPatchInteractionModels(basicThermoCloud);
-makeParcelStochasticCollisionModels(basicThermoCloud);
-makeParcelSurfaceFilmModels(basicThermoCloud);
-makeParcelTurbulenceDispersionModels(basicThermoCloud);
-// Thermo sub-models
-makeParcelHeatTransferModels(basicThermoCloud);
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+#define makeParcelTurbulenceDispersionModels(CloudType)                        \
+                                                                               \
+    typedef Foam::CloudType::kinematicCloudType kinematicCloudType;            \
+    defineNamedTemplateTypeNameAndDebug                                        \
+    (                                                                          \
+        Foam::DispersionRASModel<kinematicCloudType>,                          \
+        0                                                                      \
+    );                                                                         \
+                                                                               \
+    makeDispersionModelType(GradientDispersionRAS, CloudType);                 \
+    makeDispersionModelType(StochasticDispersionRAS, CloudType);               \
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
 
 // ************************************************************************* //

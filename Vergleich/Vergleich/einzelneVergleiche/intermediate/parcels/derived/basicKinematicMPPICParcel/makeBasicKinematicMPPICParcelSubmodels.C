@@ -41,7 +41,7 @@ License
 #include "makeMPPICParcelDampingModels.H"
 #include "makeMPPICParcelIsotropyModels.H"
 #include "makeMPPICParcelPackingModels.H"
-
+#include "makeParcelTurbulenceDispersionModels.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 makeParcelCloudFunctionObjects(basicKinematicMPPICCloud);
@@ -54,7 +54,7 @@ makeParcelInjectionModels(basicKinematicMPPICCloud);
 makeParcelPatchInteractionModels(basicKinematicMPPICCloud);
 makeParcelStochasticCollisionModels(basicKinematicMPPICCloud);
 makeParcelSurfaceFilmModels(basicKinematicMPPICCloud);
-
+makeParcelTurbulenceDispersionModels(basicKinematicMPPICCloud);
 // MPPIC sub-models
 makeMPPICParcelDampingModels(basicKinematicMPPICCloud);
 makeMPPICParcelIsotropyModels(basicKinematicMPPICCloud);
