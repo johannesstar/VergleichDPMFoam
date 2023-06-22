@@ -1,0 +1,12 @@
+#!/bin/sh
+cd "${0%/*}" || exit    # Run from this directory
+
+wclean libso intermediate
+wclean libso DPMTurbulenceModels
+
+wclean
+wclean extMPPICFoam
+wclean extDPMDyMFoam
+wclean extDPMDyMFoam/extMPPICDyMFoam
+
+#------------------------------------------------------------------------------
