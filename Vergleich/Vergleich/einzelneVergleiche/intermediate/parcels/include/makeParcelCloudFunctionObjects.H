@@ -39,6 +39,7 @@ License
 #include "Bitter2.H"//hinzugefügt
 #include "Arabnejad.H"
 #include "Arabnejad2.H"//hinzugefügt
+#include "ParticleCounter.H"//hinzugefügt
 #include "NeilsonGilchrist.H"
 #include "Oka.H"
 #include "ParticleTracks.H"
@@ -63,6 +64,7 @@ License
     makeCloudFunctionObjectType(Bitter2, CloudType);                           \
     makeCloudFunctionObjectType(Arabnejad, CloudType);                         \
     makeCloudFunctionObjectType(Arabnejad2, CloudType);                        \
+    makeCloudFunctionObjectType(ParticleCounter, CloudType);                   \
     makeCloudFunctionObjectType(myArab, CloudType);				  \
     makeCloudFunctionObjectType(NeilsonGilchrist, CloudType);                  \
     makeCloudFunctionObjectType(Oka, CloudType);                               \
